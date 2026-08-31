@@ -29,6 +29,7 @@ require (
 	github.com/refraction-networking/utls v1.8.3-0.20260301010127-aa6edf4b11af // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
+	github.com/sagernet/gomobile v0.1.11 // indirect
 	github.com/sagernet/sing v0.7.13 // indirect
 	github.com/sagernet/sing-shadowsocks v0.2.9 // indirect
 	github.com/vishvananda/netlink v1.3.1 // indirect
