@@ -150,6 +150,7 @@ func ReconcileBrowserDialer(dialerAddr string) {
 // doShutdown shuts down the Xray instance and cleans up resources
 func (x *CoreController) doShutdown() {
 	if x.coreInstance != nil {
+		releaseSystemDialer(x.coreInstance)
 		if err := x.coreInstance.Close(); err != nil {
 			log.Printf("core shutdown error: %v", err)
 		}
@@ -167,7 +168,7 @@ func (x *CoreController) doStartLoop(configContent string) error {
 		return fmt.Errorf("config error: %w", err)
 	}
 
-	x.coreInstance, err = core.New(config)
+	x.coreInstance, err = newRunningInstance(config)
 	if err != nil {
 		return fmt.Errorf("core init failed: %w", err)
 	}
@@ -176,7 +177,9 @@ func (x *CoreController) doStartLoop(configContent string) error {
 	log.Println("starting core...")
 	x.IsRunning = true
 	if err := x.coreInstance.Start(); err != nil {
-		x.IsRunning = false
+		// Close whatever did start (listeners, goroutines); the next start would overwrite
+		// coreInstance and leak it.
+		x.doShutdown()
 		return fmt.Errorf("startup failed: %w", err)
 	}
 

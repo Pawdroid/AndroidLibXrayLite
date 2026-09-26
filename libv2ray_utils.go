@@ -71,24 +71,29 @@ func MeasureOutboundDelay(ConfigureFileContent string, url string) (int64, error
 
 	config.Inbound = nil
 	var essentialApp []*serial.TypedMessage
+	var dnsApp *serial.TypedMessage
 	for _, app := range config.App {
 		if app.Type == "xray.app.proxyman.OutboundConfig" ||
 			app.Type == "xray.app.dispatcher.Config" ||
 			app.Type == "xray.app.log.Config" {
 			essentialApp = append(essentialApp, app)
 		}
+		if app.Type == "xray.app.dns.Config" {
+			dnsApp = app
+		}
 	}
 	config.App = essentialApp
 
-	inst, err := core.New(config)
+	inst, release, err := newMeasurementInstance(config, dnsApp)
 	if err != nil {
 		return -1, fmt.Errorf("instance creation failed: %w", err)
 	}
+	// Close even when Start fails, so a partial start does not leak.
+	defer release()
 
 	if err := inst.Start(); err != nil {
 		return -1, fmt.Errorf("startup failed: %w", err)
 	}
-	defer inst.Close()
 	return measureInstDelay(context.Background(), inst, url)
 }
 
